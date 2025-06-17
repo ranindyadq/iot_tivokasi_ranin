@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "author": "Ranindya Dwi Qintari",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 43.1, "left": -5, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -95.7, "left": 23.4, "attrs": {} },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 140.4,
+      "left": 205.4,
+      "attrs": { "color": "red" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "dht1:GND", "esp:GND.2", "black", [ "v19.2", "h-86.4", "v153.7" ] ],
+    [ "dht1:VCC", "esp:3V3", "red", [ "v19.2", "h76.8", "v163.2" ] ],
+    [ "dht1:SDA", "esp:D15", "green", [ "v19.2", "h76.9", "v144.2" ] ],
+    [ "led1:C", "esp:GND.1", "green", [ "v0" ] ],
+    [ "esp:D2", "led1:A", "green", [ "h61.9", "v-53.6", "h86.4", "v57.6" ] ]
+  ],
+  "dependencies": {}
+}
