@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>IoT MQTT Monitoring</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <style>
+    body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; }
+    h2 { text-align: center; }
+    .slider {
+      width: 100%; height: 25px;
+      background: #FFD65C;
+      outline: none; margin-top: 20px;
+    }
+    .slider::-webkit-slider-thumb {
+      width: 35px; height: 35px;
+      background: #003249; cursor: pointer;
+    }
+    #textSliderValue {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #003249;
+    }
+  </style>
+</head>
+<body>
+
+<h2>ESP32 MQTT Weather Monitoring</h2>
+
+<div id="chart-temperature" style="width:100%; height:400px;"></div>
+<div id="chart-humidity" style="width:100%; height:400px;"></div>
+
+<p style="text-align:center;">
+  PWM VALUE: <span id="textSliderValue">0</span>
+</p>
+<input type="range" id="pwmSlider" min="0" max="255" value="0" class="slider" oninput="updateSlider(this.value)">
+
+<script>
+  const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+
+  client.on('connect', () => {
+    console.log('✅ Connected to MQTT broker');
+    client.subscribe('IOT/temp');
+    client.subscribe('IOT/hum');
+  });
+
+  client.on('error', (err) => {
+    console.error('MQTT Error:', err);
+  });
+
+  const chartT = new Highcharts.Chart({
+    chart: { renderTo: 'chart-temperature' },
+    title: { text: 'Temperature (°C)' },
+    series: [{ name: 'Temperature', data: [] }],
+    xAxis: { type: 'datetime' },
+    yAxis: { title: { text: '°C' } },
+    credits: { enabled: false }
+  });
+
+  const chartH = new Highcharts.Chart({
+    chart: { renderTo: 'chart-humidity' },
+    title: { text: 'Humidity (%)' },
+    series: [{ name: 'Humidity', data: [] }],
+    xAxis: { type: 'datetime' },
+    yAxis: { title: { text: '%' } },
+    credits: { enabled: false }
+  });
+
+  client.on('message', (topic, message) => {
+    const value = parseFloat(message.toString());
+    const x = (new Date()).getTime();
+
+    if (topic === 'IOT/temp') {
+      chartT.series[0].addPoint([x, value], true, chartT.series[0].data.length > 40);
+    } else if (topic === 'IOT/hum') {
+      chartH.series[0].addPoint([x, value], true, chartH.series[0].data.length > 40);
+    }
+  });
+
+  function updateSlider(value) {
+    document.getElementById("textSliderValue").innerText = value;
+    client.publish('IOT/mqtt', value.toString());
+    console.log('PWM Sent:', value);
+  }
+</script>
+
+</body>
+</html>
